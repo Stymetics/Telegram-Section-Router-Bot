@@ -1,0 +1,13 @@
+{
+  "name": "telegram-web-router-bot",
+  "version": "2.0.0",
+  "description": "Web Dashboard + Telegram Bot to format and route multi-section messages to a Supergroup Topic.",
+  "main": "api/send.js",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "telegraf": "^4.16.3"
+  },
+  "engines": {
+    "node": ">=22.x"
+  }
+}
