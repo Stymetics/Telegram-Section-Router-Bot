@@ -3,57 +3,89 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Telegram Topic Sender Dashboard</title>
+  <title>Telegram Topic Dispatcher</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen py-8 px-4">
-  <div class="max-w-4xl mx-auto">
-    
-    <!-- Header -->
-    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 mb-6 shadow-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-      <div>
-        <h1 class="text-2xl font-bold text-white flex items-center gap-2">
-          <span>🚀</span> Telegram Topic Dispatcher
-        </h1>
-        <p class="text-slate-400 text-sm mt-1">
-          Format & send split 1-click copyable messages directly to your Supergroup Topic.
-        </p>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-center py-8 px-4">
+
+  <!-- ==================== 1. LOGIN SCREEN ==================== -->
+  <div id="loginScreen" class="max-w-md w-full mx-auto bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl">
+    <div class="text-center mb-6">
+      <div class="w-16 h-16 bg-blue-600/20 border border-blue-500/40 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl">
+        🔐
       </div>
-      <button id="toggleRawBtn" type="button" class="text-xs bg-slate-700 hover:bg-slate-600 text-sky-400 font-medium px-3.5 py-2 rounded-lg border border-slate-600 transition">
-        📋 Paste Raw 4-Line Text Instead
-      </button>
+      <h1 class="text-2xl font-bold text-white">Admin Login</h1>
+      <p class="text-slate-400 text-sm mt-1">
+        একবার পাসওয়ার্ড দিয়ে লগইন করলে ব্রাউজারে সেভ হয়ে থাকবে।
+      </p>
     </div>
 
-    <!-- Raw 4-Line Quick Importer (Hidden by default) -->
-    <div id="rawImportBox" class="hidden bg-slate-800/90 border border-sky-500/40 rounded-2xl p-5 mb-6">
+    <form id="loginForm" class="space-y-4">
+      <div>
+        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
+          Admin Password
+        </label>
+        <div class="relative">
+          <input type="password" id="loginPasswordInput" required placeholder="আপনার পাসওয়ার্ড লিখুন..." class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-sky-500 pr-16" />
+          <button type="button" id="togglePassView" class="absolute right-3 top-3 text-xs text-slate-400 hover:text-white">
+            Show
+          </button>
+        </div>
+      </div>
+
+      <div id="loginErrorBox" class="hidden rounded-xl p-3 text-xs font-medium bg-rose-500/20 text-rose-300 border border-rose-500/40"></div>
+
+      <button type="submit" id="loginBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition">
+        🚀 Login to Dashboard
+      </button>
+    </form>
+  </div>
+
+  <!-- ==================== 2. MAIN DASHBOARD (Hidden until logged in) ==================== -->
+  <div id="appScreen" class="hidden max-w-4xl w-full mx-auto">
+    
+    <!-- Top Header -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 mb-6 shadow-lg flex flex-wrap items-center justify-between gap-4">
+      <div>
+        <h1 class="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
+          <span>🚀</span> Telegram Topic Dispatcher
+        </h1>
+        <p class="text-slate-400 text-xs sm:text-sm mt-0.5">
+          আপনার সব লেখা অটোমেটিক সেভ থাকে — রিফ্রেশ দিলেও মুছবে না।
+        </p>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="toggleRawBtn" type="button" class="text-xs bg-slate-800 hover:bg-slate-700 text-sky-400 font-medium px-3.5 py-2 rounded-lg border border-slate-700 transition">
+          📋 Quick 4-Line Paste
+        </button>
+        <button id="logoutBtn" type="button" class="text-xs bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 font-medium px-3 py-2 rounded-lg border border-rose-500/30 transition">
+          🔓 Logout
+        </button>
+      </div>
+    </div>
+
+    <!-- Raw 4-Line Quick Importer -->
+    <div id="rawImportBox" class="hidden bg-slate-900 border border-sky-500/40 rounded-2xl p-5 mb-6">
       <label class="block text-sm font-semibold text-sky-400 mb-2">
         Quick Paste (Line 1: Headline, Line 2: Product Name, Line 3: Code, Line 4+: Body)
       </label>
-      <textarea id="rawTextInput" rows="5" placeholder="Headline Here&#10;Product Name Here&#10;PROD-CODE-123&#10;First section...&#10;---&#10;Second section..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-sky-500"></textarea>
+      <textarea id="rawTextInput" rows="5" placeholder="Headline Here&#10;Product Name Here&#10;PROD-CODE-123&#10;First section...&#10;---&#10;Second section..." class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-sky-500"></textarea>
       <button id="applyRawBtn" type="button" class="mt-3 bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold px-4 py-2 rounded-lg transition">
-        ⬇️ Auto-Fill Form Below
+        ⬇️ ফর্মের ঘরগুলোতে বসিয়ে দিন
       </button>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
       
       <!-- Left Column: Input Form -->
-      <form id="senderForm" class="lg:col-span-7 bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-lg space-y-4">
+      <form id="senderForm" class="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-lg space-y-4">
         
-        <!-- Password -->
-        <div>
-          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">
-            🔒 Admin Password *
-          </label>
-          <input type="password" id="password" required placeholder="Enter your ADMIN_PASSWORD" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500" />
-        </div>
-
         <!-- Line 1: Headline -->
         <div>
           <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">
             1️⃣ Headline / Title (Auto-Uppercased) *
           </label>
-          <input type="text" id="headline" required placeholder="e.g. New Summer Arrival" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500" />
+          <input type="text" id="headline" required placeholder="e.g. New Summer Arrival" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500" />
         </div>
 
         <!-- Line 2 & 3: Product Name & Code -->
@@ -62,13 +94,13 @@
             <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">
               2️⃣ Product Name (1-Click Copy) *
             </label>
-            <input type="text" id="productName" required placeholder="e.g. Ultra Running Shoes" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500" />
+            <input type="text" id="productName" required placeholder="e.g. Ultra Running Shoes" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500" />
           </div>
           <div>
             <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">
               3️⃣ Product Code (1-Click Copy) *
             </label>
-            <input type="text" id="productCode" required placeholder="e.g. SKU-9920" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500" />
+            <input type="text" id="productCode" required placeholder="e.g. SKU-9920" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500" />
           </div>
         </div>
 
@@ -78,34 +110,39 @@
             <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400">
               4️⃣ Body Sections *
             </label>
-            <button type="button" id="insertDelimiterBtn" class="text-xs bg-slate-700 hover:bg-slate-600 text-sky-300 px-2.5 py-1 rounded-md transition">
-              + Insert Delimiter (---)
-            </button>
+            <div class="flex gap-2">
+              <button type="button" id="insertDelimiterBtn" class="text-xs bg-slate-800 hover:bg-slate-700 text-sky-300 px-2.5 py-1 rounded-md border border-slate-700 transition">
+                + Delimiter (---)
+              </button>
+              <button type="button" id="clearFormBtn" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-400 px-2.5 py-1 rounded-md border border-slate-700 transition">
+                🗑️ Clear
+              </button>
+            </div>
           </div>
-          <textarea id="bodyText" rows="7" required placeholder="Write first message section here...&#10;---&#10;Write second message section here..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3.5 text-sm text-white font-mono focus:outline-none focus:border-sky-500"></textarea>
+          <textarea id="bodyText" rows="7" required placeholder="প্রথম সেকশনের টেক্সট...&#10;---&#10;দ্বিতীয় সেকশনের টেক্সট..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-sm text-white font-mono focus:outline-none focus:border-sky-500"></textarea>
         </div>
 
         <!-- Advanced Options Accordion -->
-        <details class="bg-slate-900/60 border border-slate-700/80 rounded-xl p-3.5">
+        <details class="bg-slate-950/70 border border-slate-800 rounded-xl p-3.5">
           <summary class="text-xs font-semibold text-slate-300 cursor-pointer select-none">
-            ⚙️ Custom Emoji, Delimiter & Target Topic Override (Optional)
+            ⚙️ Custom Emoji, Delimiter & Target Topic (Auto-Saved)
           </summary>
-          <div class="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-slate-700/60">
+          <div class="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-slate-800">
             <div>
               <label class="block text-xs text-slate-400 mb-1">Headline Emoji</label>
-              <input type="text" id="emoji" value="📌" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white" />
+              <input type="text" id="emoji" value="📌" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white" />
             </div>
             <div>
               <label class="block text-xs text-slate-400 mb-1">Section Delimiter</label>
-              <input type="text" id="delimiter" value="---" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white font-mono" />
+              <input type="text" id="delimiter" value="---" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white font-mono" />
             </div>
             <div>
               <label class="block text-xs text-slate-400 mb-1">Override Chat ID</label>
-              <input type="text" id="customChatId" placeholder="Uses .env default" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white font-mono" />
+              <input type="text" id="customChatId" placeholder="Uses .env default" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white font-mono" />
             </div>
             <div>
               <label class="block text-xs text-slate-400 mb-1">Override Topic ID</label>
-              <input type="text" id="customTopicId" placeholder="Uses .env default" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white font-mono" />
+              <input type="text" id="customTopicId" placeholder="Uses .env default" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white font-mono" />
             </div>
           </div>
         </details>
@@ -114,14 +151,14 @@
         <div id="statusBox" class="hidden rounded-xl p-3.5 text-sm font-medium"></div>
 
         <!-- Submit Button -->
-        <button type="submit" id="submitBtn" class="w-full bg-sky-600 hover:bg-sky-500 active:bg-sky-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition flex items-center justify-center gap-2">
+        <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition flex items-center justify-center gap-2">
           <span>🚀 Send Messages to Telegram Topic</span>
         </button>
       </form>
 
       <!-- Right Column: Live Telegram Preview -->
-      <div class="lg:col-span-5 bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-lg flex flex-col">
-        <div class="flex items-center justify-between border-b border-slate-700 pb-3 mb-4">
+      <div class="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-lg flex flex-col">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
           <h2 class="text-sm font-bold uppercase tracking-wider text-slate-300">
             📱 Live Telegram Preview
           </h2>
@@ -130,18 +167,23 @@
           </span>
         </div>
 
-        <div id="previewContainer" class="space-y-3 overflow-y-auto max-h-[520px] pr-1 flex-1">
-          <p class="text-slate-500 text-sm italic text-center py-12">
-            Start typing on the left to preview how your split messages will appear in Telegram...
-          </p>
-        </div>
+        <div id="previewContainer" class="space-y-3 overflow-y-auto max-h-[520px] pr-1 flex-1"></div>
       </div>
 
     </div>
   </div>
 
   <script>
-    const passwordEl = document.getElementById('password');
+    // DOM Elements
+    const loginScreen = document.getElementById('loginScreen');
+    const appScreen = document.getElementById('appScreen');
+    const loginForm = document.getElementById('loginForm');
+    const loginPasswordInput = document.getElementById('loginPasswordInput');
+    const loginErrorBox = document.getElementById('loginErrorBox');
+    const loginBtn = document.getElementById('loginBtn');
+    const togglePassView = document.getElementById('togglePassView');
+    const logoutBtn = document.getElementById('logoutBtn');
+
     const headlineEl = document.getElementById('headline');
     const productNameEl = document.getElementById('productName');
     const productCodeEl = document.getElementById('productCode');
@@ -155,10 +197,130 @@
     const statusBox = document.getElementById('statusBox');
     const submitBtn = document.getElementById('submitBtn');
 
-    // Remember password in browser localStorage for convenience
-    if (localStorage.getItem('tg_admin_pass')) {
-      passwordEl.value = localStorage.getItem('tg_admin_pass');
+    const STORAGE_KEYS = {
+      PASS: 'tg_saved_admin_password',
+      DRAFT: 'tg_saved_form_draft_v2'
+    };
+
+    // Show / Hide Password toggle on Login Screen
+    togglePassView.addEventListener('click', () => {
+      if (loginPasswordInput.type === 'password') {
+        loginPasswordInput.type = 'text';
+        togglePassView.textContent = 'Hide';
+      } else {
+        loginPasswordInput.type = 'password';
+        togglePassView.textContent = 'Show';
+      }
+    });
+
+    // Save all form fields to LocalStorage automatically
+    function saveDraftToLocal() {
+      const draft = {
+        headline: headlineEl.value,
+        productName: productNameEl.value,
+        productCode: productCodeEl.value,
+        bodyText: bodyTextEl.value,
+        emoji: emojiEl.value,
+        delimiter: delimiterEl.value,
+        customChatId: customChatIdEl.value,
+        customTopicId: customTopicIdEl.value,
+      };
+      localStorage.setItem(STORAGE_KEYS.DRAFT, JSON.stringify(draft));
     }
+
+    // Load saved form fields from LocalStorage on refresh
+    function loadDraftFromLocal() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEYS.DRAFT);
+        if (!raw) return;
+        const draft = JSON.parse(raw);
+        if (draft.headline !== undefined) headlineEl.value = draft.headline;
+        if (draft.productName !== undefined) productNameEl.value = draft.productName;
+        if (draft.productCode !== undefined) productCodeEl.value = draft.productCode;
+        if (draft.bodyText !== undefined) bodyTextEl.value = draft.bodyText;
+        if (draft.emoji !== undefined) emojiEl.value = draft.emoji;
+        if (draft.delimiter !== undefined) delimiterEl.value = draft.delimiter;
+        if (draft.customChatId !== undefined) customChatIdEl.value = draft.customChatId;
+        if (draft.customTopicId !== undefined) customTopicIdEl.value = draft.customTopicId;
+      } catch (e) {
+        console.error('Failed to load draft:', e);
+      }
+    }
+
+    function showDashboard() {
+      loginScreen.classList.add('hidden');
+      appScreen.classList.remove('hidden');
+      loadDraftFromLocal();
+      updatePreview();
+    }
+
+    function showLogin(errorMsg = '') {
+      appScreen.classList.add('hidden');
+      loginScreen.classList.remove('hidden');
+      if (errorMsg) {
+        loginErrorBox.textContent = `❌ ${errorMsg}`;
+        loginErrorBox.classList.remove('hidden');
+      } else {
+        loginErrorBox.classList.add('hidden');
+      }
+    }
+
+    // Check if user is already logged in on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedPass = localStorage.getItem(STORAGE_KEYS.PASS);
+      if (savedPass) {
+        showDashboard();
+      }
+    });
+
+    // Handle First-Time Login Form Submission
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      loginErrorBox.classList.add('hidden');
+      const pass = loginPasswordInput.value.trim();
+      if (!pass) return;
+
+      loginBtn.disabled = true;
+      loginBtn.textContent = '⏳ Verifying Password...';
+
+      try {
+        const res = await fetch('/api/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'verify', password: pass })
+        });
+        const data = await res.json();
+
+        if (res.ok && data.ok) {
+          localStorage.setItem(STORAGE_KEYS.PASS, pass);
+          showDashboard();
+        } else {
+          showLogin(data.error || 'পাসওয়ার্ড মেলেনি!');
+        }
+      } catch (err) {
+        showLogin('সার্ভারের সাথে কানেক্ট করা যাচ্ছে না।');
+      } finally {
+        loginBtn.disabled = false;
+        loginBtn.textContent = '🚀 Login to Dashboard';
+      }
+    });
+
+    // Logout Button
+    logoutBtn.addEventListener('click', () => {
+      localStorage.removeItem(STORAGE_KEYS.PASS);
+      loginPasswordInput.value = '';
+      showLogin();
+    });
+
+    // Clear Form Button
+    document.getElementById('clearFormBtn').addEventListener('click', () => {
+      headlineEl.value = '';
+      productNameEl.value = '';
+      productCodeEl.value = '';
+      bodyTextEl.value = '';
+      saveDraftToLocal();
+      updatePreview();
+    });
 
     // Toggle Raw 4-Line Paste Box
     document.getElementById('toggleRawBtn').addEventListener('click', () => {
@@ -170,7 +332,7 @@
       const raw = document.getElementById('rawTextInput').value.replace(/\r\n/g, '\n').trim();
       const lines = raw.split('\n');
       if (lines.length < 4) {
-        alert('Please enter at least 4 lines (Line 1: Headline, Line 2: Name, Line 3: Code, Line 4+: Body).');
+        alert('কমপক্ষে ৪ লাইন থাকতে হবে (Line 1: Headline, Line 2: Name, Line 3: Code, Line 4+: Body).');
         return;
       }
       headlineEl.value = lines[0].trim();
@@ -178,6 +340,7 @@
       productCodeEl.value = lines[2].trim();
       bodyTextEl.value = lines.slice(3).join('\n').trim();
       document.getElementById('rawImportBox').classList.add('hidden');
+      saveDraftToLocal();
       updatePreview();
     });
 
@@ -189,6 +352,7 @@
       const current = bodyTextEl.value;
       bodyTextEl.value = current.substring(0, start) + `\n${delim}\n` + current.substring(end);
       bodyTextEl.focus();
+      saveDraftToLocal();
       updatePreview();
     });
 
@@ -215,12 +379,12 @@
       sectionCounter.textContent = `${sections.length} Message${sections.length === 1 ? '' : 's'}`;
 
       if (sections.length === 0 && !headlineEl.value && !productNameEl.value) {
-        previewContainer.innerHTML = `<p class="text-slate-500 text-sm italic text-center py-12">Start typing on the left to preview how your split messages will appear in Telegram...</p>`;
+        previewContainer.innerHTML = `<p class="text-slate-500 text-sm italic text-center py-12">বাম পাশের ঘরগুলোতে লিখলে এখানে লাইভ প্রিভিউ দেখতে পাবেন...</p>`;
         return;
       }
 
-      const previewItems = (sections.length ? sections : ['Your section text will appear inside this 1-click copyable code block...']).map((sec, idx) => `
-        <div class="bg-slate-900 border border-slate-700/80 rounded-xl p-3.5 text-xs space-y-1.5 shadow">
+      const previewItems = (sections.length ? sections : ['আপনার সেকশনের টেক্সট এই কোড ব্লকের ভেতর থাকবে (১-ক্লিকে কপি হবে)...']).map((sec, idx) => `
+        <div class="bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-xs space-y-1.5 shadow">
           <div class="text-[10px] text-sky-400 font-semibold uppercase tracking-wider mb-1">
             Message #${idx + 1}
           </div>
@@ -229,38 +393,47 @@
           </div>
           <div class="pt-1">
             📦 <span class="font-semibold">Product Name:</span>
-            <code class="bg-slate-800 text-amber-300 px-1.5 py-0.5 rounded border border-slate-700">${escapeHTML(productName)}</code>
+            <code class="bg-slate-900 text-amber-300 px-1.5 py-0.5 rounded border border-slate-800">${escapeHTML(productName)}</code>
           </div>
           <div>
             🔖 <span class="font-semibold">Product Code:</span>
-            <code class="bg-slate-800 text-amber-300 px-1.5 py-0.5 rounded border border-slate-700">${escapeHTML(productCode)}</code>
+            <code class="bg-slate-900 text-amber-300 px-1.5 py-0.5 rounded border border-slate-800">${escapeHTML(productCode)}</code>
           </div>
-          <pre class="bg-slate-950 text-emerald-300 p-2.5 rounded-lg border border-slate-800 overflow-x-auto whitespace-pre-wrap font-mono mt-2">${escapeHTML(sec)}</pre>
+          <pre class="bg-slate-900/90 text-emerald-300 p-2.5 rounded-lg border border-slate-800 overflow-x-auto whitespace-pre-wrap font-mono mt-2">${escapeHTML(sec)}</pre>
         </div>
       `);
 
       previewContainer.innerHTML = previewItems.join('');
     }
 
-    [headlineEl, productNameEl, productCodeEl, bodyTextEl, emojiEl, delimiterEl].forEach(el => {
-      el.addEventListener('input', updatePreview);
+    // Auto-save & update preview on every keystroke
+    [headlineEl, productNameEl, productCodeEl, bodyTextEl, emojiEl, delimiterEl, customChatIdEl, customTopicIdEl].forEach(el => {
+      el.addEventListener('input', () => {
+        saveDraftToLocal();
+        updatePreview();
+      });
     });
 
-    // Handle Form Submission
+    // Handle Send Messages Form Submission
     document.getElementById('senderForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       statusBox.classList.add('hidden');
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = `<span>⏳ Sending Messages... Please wait</span>`;
+      const savedPassword = localStorage.getItem(STORAGE_KEYS.PASS);
 
-      localStorage.setItem('tg_admin_pass', passwordEl.value);
+      if (!savedPassword) {
+        showLogin('অনুগ্রহ করে আবার লগইন করুন।');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<span>⏳ মেসেজ পাঠানো হচ্ছে... অপেক্ষা করুন</span>`;
 
       try {
         const response = await fetch('/api/send', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            password: passwordEl.value,
+            password: savedPassword,
             headline: headlineEl.value,
             productName: productNameEl.value,
             productCode: productCodeEl.value,
@@ -274,15 +447,23 @@
 
         const data = await response.json();
 
+        // If password changed on server, return to login screen
+        if (response.status === 401) {
+          localStorage.removeItem(STORAGE_KEYS.PASS);
+          showLogin(data.error);
+          return;
+        }
+
         statusBox.classList.remove('hidden');
         if (response.ok && data.ok) {
           statusBox.className = 'rounded-xl p-3.5 text-sm font-medium bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
           statusBox.textContent = `✅ ${data.message}`;
           bodyTextEl.value = '';
+          saveDraftToLocal();
           updatePreview();
         } else {
           statusBox.className = 'rounded-xl p-3.5 text-sm font-medium bg-rose-500/20 text-rose-300 border border-rose-500/40';
-          statusBox.textContent = `❌ ${data.error || 'Something went wrong.'}`;
+          statusBox.textContent = `❌ ${data.error || 'কিছু একটা সমস্যা হয়েছে।'}`;
         }
       } catch (err) {
         statusBox.classList.remove('hidden');
