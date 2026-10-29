@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "rewrites": [
+    {
+      "source": "/api/send",
+      "destination": "/api/send.js"
+    },
+    {
+      "source": "/api/webhook",
+      "destination": "/api/index.js"
+    }
+  ]
+}
