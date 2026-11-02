@@ -16,13 +16,33 @@ function escapeHTML(text) {
     .replace(/>/g, '&gt;');
 }
 
+function formatHref(url) {
+  if (!url) return '';
+  let trimmed = String(url).trim();
+  if (!/^https?:\/\//i.test(trimmed)) {
+    trimmed = 'https://' + trimmed;
+  }
+  return trimmed;
+}
+
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// Format Header Message - Title & Product Code in UPPERCASE
-function formatHeaderMessage({ headline, productName, productCode, emoji = '📌' }) {
+// Format Header Message - Title & Product Code in UPPERCASE, plus Costing, Sale Price, Sources, Link
+function formatHeaderMessage({
+  headline,
+  productName,
+  productCode,
+  costing,
+  salePrice,
+  sources,
+  link,
+  emoji = '📌',
+}) {
   const safeHeadline = escapeHTML((headline || '').trim().toUpperCase());
   const safeProductName = escapeHTML((productName || '').trim().toUpperCase());
   const safeProductCode = escapeHTML((productCode || '').trim().toUpperCase());
+  const safeCosting = escapeHTML((costing || '').trim().toUpperCase());
+  const safeSalePrice = escapeHTML((salePrice || '').trim().toUpperCase());
   const cleanEmoji = escapeHTML((emoji || '📌').trim());
 
   const lines = [
@@ -34,7 +54,31 @@ function formatHeaderMessage({ headline, productName, productCode, emoji = '📌
     lines.push(`📦 <b>PRODUCT NAME:</b> <code>${safeProductName}</code>`);
   }
   if (safeProductCode) {
-    lines.push(`🔖 <b>PRODUCT CODE:</b> <code>${safeProductCode}</code>`);
+    lines.push(`🔖 <b>SKU / CODE:</b> <code>${safeProductCode}</code>`);
+  }
+  if (safeCosting) {
+    lines.push(`💵 <b>COSTING:</b> <code>${safeCosting}</code>`);
+  }
+  if (safeSalePrice) {
+    lines.push(`🏷️ <b>SALE PRICE:</b> <code>${safeSalePrice}</code>`);
+  }
+
+  // Handle Sources: only "Source" text is visible and clickable
+  if (sources && sources.trim()) {
+    const rawSource = sources.trim();
+    const urlMatch = rawSource.match(/https?:\/\/[^\s]+/) || (rawSource.includes('.') ? [rawSource] : null);
+    if (urlMatch) {
+      const cleanUrl = escapeHTML(formatHref(urlMatch[0]));
+      lines.push(`🔗 <b>SOURCE:</b> <a href="${cleanUrl}">Source</a>`);
+    } else {
+      lines.push(`🔗 <b>SOURCE:</b> <code>${escapeHTML(rawSource.toUpperCase())}</code>`);
+    }
+  }
+
+  // Handle Link: only "Link" text is visible and clickable
+  if (link && link.trim()) {
+    const cleanUrl = escapeHTML(formatHref(link.trim()));
+    lines.push(`🌐 <b>LINK:</b> <a href="${cleanUrl}">Link</a>`);
   }
 
   return lines.join('\n');
@@ -132,6 +176,10 @@ module.exports = async (req, res) => {
       headline,
       productName,
       productCode,
+      costing,
+      salePrice,
+      sources,
+      link,
       imageUrls,
       bodyText,
       delimiter = process.env.SECTION_DELIMITER || '---',
@@ -180,7 +228,7 @@ module.exports = async (req, res) => {
     if (!headline || !productCode || !bodyText) {
       return res.status(400).json({
         ok: false,
-        error: 'Headline, Product Code, এবং Body পূরণ করা আবশ্যক।',
+        error: 'Headline, Product Code (SKU), এবং Body পূরণ করা আবশ্যক।',
       });
     }
 
@@ -246,11 +294,15 @@ module.exports = async (req, res) => {
       await sleep(400);
     }
 
-    // ধাপ ২: আপার কেসে টাইটেল এবং প্রোডাক্ট কোড সহ হেডার মেসেজ পাঠানো
+    // ধাপ ২: আপার কেসে টাইটেল এবং প্রোডাক্ট কোড সহ হেডার মেসেজ পাঠানো (সাথে Costing, Sale Price, Source, Link)
     const headerHtml = formatHeaderMessage({
       headline,
       productName,
       productCode,
+      costing,
+      salePrice,
+      sources,
+      link,
       emoji,
     });
 
