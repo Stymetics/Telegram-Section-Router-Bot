@@ -3,159 +3,291 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Telegram Topic Sender Dashboard</title>
+  <title>Telegram Topic Dispatcher — Studio Pro</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Custom clean scrollbar */
+    ::-webkit-scrollbar { width: 7px; height: 7px; }
+    ::-webkit-scrollbar-track { background: #090d16; }
+    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #38bdf8; }
+  </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen py-8 px-4">
-  <div class="max-w-4xl mx-auto">
-    
-    <!-- Header -->
-    <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 mb-6 shadow-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-      <div>
-        <h1 class="text-2xl font-bold text-white flex items-center gap-2">
-          <span>🚀</span> Telegram Topic Dispatcher
-        </h1>
-        <p class="text-slate-400 text-sm mt-1">
-          Sends photo(s) first, then Title & Product Code in UPPERCASE, followed by separate 1-click copyable sections.
+<body class="bg-[#0A0D14] text-slate-100 min-h-screen flex flex-col font-sans antialiased">
+
+  <!-- ==================== 1. LOGIN SCREEN ==================== -->
+  <div id="loginScreen" class="flex-1 flex items-center justify-center p-4">
+    <div class="max-w-md w-full bg-[#0F172A] border border-slate-800 rounded-3xl p-8 shadow-2xl">
+      <div class="text-center mb-6">
+        <div class="w-16 h-16 bg-sky-500/10 border border-sky-500/30 rounded-2xl flex items-center justify-center mx-auto mb-4 text-3xl">
+          🔐
+        </div>
+        <h1 class="text-2xl font-bold text-white tracking-tight">Admin Login</h1>
+        <p class="text-slate-400 text-xs mt-1.5 leading-relaxed">
+          পাসওয়ার্ড একবার লিখলে ব্রাউজারে স্বয়ংক্রিয়ভাবে সেভ থাকবে।
         </p>
       </div>
-      <button id="toggleRawBtn" type="button" class="text-xs bg-slate-700 hover:bg-slate-600 text-sky-400 font-medium px-3.5 py-2 rounded-lg border border-slate-600 transition">
-        📋 Quick Paste Text
-      </button>
-    </div>
 
-    <!-- Raw Quick Importer (Hidden by default) -->
-    <div id="rawImportBox" class="hidden bg-slate-800/90 border border-sky-500/40 rounded-2xl p-5 mb-6">
-      <label class="block text-sm font-semibold text-sky-400 mb-1">
-        Quick Paste (Optional Photo Link, Title, Product Code, Body)
-      </label>
-      <p class="text-xs text-slate-400 mb-2">
-        Tip: You can put image link(s) on the first line(s). The parser will automatically sort them into the fields below.
-      </p>
-      <textarea id="rawTextInput" rows="6" placeholder="https://example.com/photo.jpg&#10;SUMMER COLLECTION&#10;SKU-9920&#10;First message section...&#10;---&#10;Second message section..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-sky-500 font-mono"></textarea>
-      <button id="applyRawBtn" type="button" class="mt-3 bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold px-4 py-2 rounded-lg transition">
-        ⬇️ Auto-Fill Form Below
-      </button>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-      
-      <!-- Left Column: Input Form -->
-      <form id="senderForm" class="lg:col-span-7 bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-lg space-y-4">
-        
-        <!-- Password -->
+      <form id="loginForm" class="space-y-4">
         <div>
-          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">
-            🔒 Admin Password *
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
+            Admin Password
           </label>
-          <input type="password" id="password" required placeholder="Enter your ADMIN_PASSWORD" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500" />
-        </div>
-
-        <!-- Photo / Image Links (Optional) -->
-        <div>
-          <label class="block text-xs font-semibold uppercase tracking-wider text-sky-400 mb-1 flex items-center justify-between">
-            <span>🖼️ 1. Photo / Image Link(s) (Sent First)</span>
-            <span class="text-[10px] text-slate-400 font-normal">Optional • 1 or multiple URLs</span>
-          </label>
-          <textarea id="imageUrls" rows="2" placeholder="https://example.com/photo1.jpg&#10;https://example.com/photo2.jpg (or comma-separated)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-sm text-white font-mono focus:outline-none focus:border-sky-500"></textarea>
-        </div>
-
-        <!-- Title & Product Code (UPPERCASE) -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">
-              🏷️ 2. Title / Headline *
-            </label>
-            <input type="text" id="headline" required placeholder="e.g. SUMMER APPAREL" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500 uppercase" />
-          </div>
-          <div>
-            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">
-              🔖 3. Product Code *
-            </label>
-            <input type="text" id="productCode" required placeholder="e.g. PROD-102" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500 uppercase" />
-          </div>
-        </div>
-
-        <!-- Product Name (Optional) -->
-        <div>
-          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1 flex items-center justify-between">
-            <span>📦 Product Name</span>
-            <span class="text-[10px] text-slate-400 font-normal">Optional</span>
-          </label>
-          <input type="text" id="productName" placeholder="e.g. Casual Cotton T-Shirt" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500 uppercase" />
-        </div>
-
-        <!-- Body Content -->
-        <div>
-          <div class="flex items-center justify-between mb-1">
-            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400">
-              📝 4. Body Sections (Sent One-by-One) *
-            </label>
-            <button type="button" id="insertDelimiterBtn" class="text-xs bg-slate-700 hover:bg-slate-600 text-sky-300 px-2.5 py-1 rounded-md transition">
-              + Insert Delimiter (---)
+          <div class="relative">
+            <input type="password" id="loginPasswordInput" required placeholder="আপনার পাসওয়ার্ড লিখুন..." class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-sky-400 pr-16 transition" />
+            <button type="button" id="togglePassView" class="absolute right-3 top-3 text-xs text-slate-400 hover:text-white transition">
+              Show
             </button>
           </div>
-          <textarea id="bodyText" rows="7" required placeholder="Write first message section here...&#10;---&#10;Write second message section here..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3.5 text-sm text-white font-mono focus:outline-none focus:border-sky-500"></textarea>
         </div>
 
-        <!-- Advanced Options Accordion -->
-        <details class="bg-slate-900/60 border border-slate-700/80 rounded-xl p-3.5">
-          <summary class="text-xs font-semibold text-slate-300 cursor-pointer select-none">
-            ⚙️ Custom Emoji, Delimiter & Target Topic Override (Optional)
-          </summary>
-          <div class="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-slate-700/60">
-            <div>
-              <label class="block text-xs text-slate-400 mb-1">Headline Emoji</label>
-              <input type="text" id="emoji" value="📌" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white" />
-            </div>
-            <div>
-              <label class="block text-xs text-slate-400 mb-1">Section Delimiter</label>
-              <input type="text" id="delimiter" value="---" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white font-mono" />
-            </div>
-            <div>
-              <label class="block text-xs text-slate-400 mb-1">Override Chat ID</label>
-              <input type="text" id="customChatId" placeholder="Uses .env default" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white font-mono" />
-            </div>
-            <div>
-              <label class="block text-xs text-slate-400 mb-1">Override Topic ID</label>
-              <input type="text" id="customTopicId" placeholder="Uses .env default" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white font-mono" />
-            </div>
-          </div>
-        </details>
+        <div id="loginErrorBox" class="hidden rounded-xl p-3 text-xs font-medium bg-rose-500/20 text-rose-300 border border-rose-500/40"></div>
 
-        <!-- Status Alert -->
-        <div id="statusBox" class="hidden rounded-xl p-3.5 text-sm font-medium"></div>
-
-        <!-- Submit Button -->
-        <button type="submit" id="submitBtn" class="w-full bg-sky-600 hover:bg-sky-500 active:bg-sky-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition flex items-center justify-center gap-2">
-          <span>🚀 Send Messages to Telegram Topic</span>
+        <button type="submit" id="loginBtn" class="w-full bg-sky-600 hover:bg-sky-500 text-white font-bold py-3.5 px-6 rounded-xl shadow-lg shadow-sky-600/20 transition duration-200">
+          🚀 Login to Workspace
         </button>
       </form>
+    </div>
+  </div>
 
-      <!-- Right Column: Live Telegram Preview -->
-      <div class="lg:col-span-5 bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-lg flex flex-col">
-        <div class="flex items-center justify-between border-b border-slate-700 pb-3 mb-4">
-          <h2 class="text-sm font-bold uppercase tracking-wider text-slate-300">
-            📱 Live Telegram Preview
-          </h2>
-          <span id="sectionCounter" class="text-xs bg-sky-500/20 text-sky-300 border border-sky-500/30 px-2.5 py-0.5 rounded-full font-semibold">
-            0 Messages
-          </span>
-        </div>
-
-        <div id="previewContainer" class="space-y-3 overflow-y-auto max-h-[580px] pr-1 flex-1">
-          <p class="text-slate-500 text-sm italic text-center py-12">
-            Start typing on the left to preview how your messages will be sequenced in Telegram...
+  <!-- ==================== 2. WORKSPACE STUDIO ==================== -->
+  <div id="appScreen" class="hidden flex-1 flex flex-col w-full h-full">
+    
+    <!-- Navigation Header -->
+    <header class="bg-[#0F172A]/90 backdrop-blur border-b border-slate-800/80 px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3 sticky top-0 z-30 shadow-md">
+      <div class="flex items-center gap-3">
+        <span class="text-2xl">🚀</span>
+        <div>
+          <h1 class="text-base sm:text-lg font-bold text-white leading-tight">
+            Telegram Topic Dispatcher
+          </h1>
+          <p class="text-slate-400 text-xs">
+            Auto-Uppercase Header • Photos First • Clean Split Sections
           </p>
         </div>
       </div>
 
+      <div class="flex flex-wrap items-center gap-2">
+        <button id="toggleZenBtn" type="button" class="text-xs bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 font-semibold px-3.5 py-2 rounded-lg border border-sky-500/30 transition">
+          ⛶ Full Editor
+        </button>
+        <button id="toggleRawBtn" type="button" class="text-xs bg-slate-800 hover:bg-slate-700 text-amber-300 font-medium px-3.5 py-2 rounded-lg border border-slate-700 transition">
+          📋 Quick Paste
+        </button>
+        <button id="clearFormBtn" type="button" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium px-3 py-2 rounded-lg border border-slate-700 transition">
+          🗑️ Clear Form
+        </button>
+        <button id="logoutBtn" type="button" class="text-xs bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 font-medium px-3 py-2 rounded-lg border border-rose-500/30 transition">
+          🔓 Logout
+        </button>
+      </div>
+    </header>
+
+    <!-- Quick 4-Line / Multi-Line Paste Importer -->
+    <div id="rawImportBox" class="hidden bg-slate-900 border-b border-sky-500/30 px-6 py-4 shadow-inner">
+      <div class="max-w-7xl mx-auto space-y-2">
+        <div class="flex items-center justify-between">
+          <label class="block text-xs font-bold uppercase tracking-wider text-sky-400">
+            Quick Multi-Line Paste (Line 1: Headline, Line 2: Product Name, Line 3: Code, Line 4: Image Link (Optional), Line 5+: Sections)
+          </label>
+          <span class="text-[11px] text-slate-400">অটোমেটিক আলাদা ঘরে ভাগ হয়ে যাবে</span>
+        </div>
+        <textarea id="rawTextInput" rows="5" placeholder="NEW ARRIVAL&#10;Sneakers Sport Pro&#10;SKU-990&#10;https://i.imgur.com/example.jpg&#10;Section 1 text here...&#10;---&#10;Section 2 text here..." class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-xs sm:text-sm text-white font-mono focus:outline-none focus:border-sky-400"></textarea>
+        <div class="flex gap-2">
+          <button id="applyRawBtn" type="button" class="bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold px-4 py-2 rounded-lg transition">
+            ⬇️ ফর্মে পেস্ট করুন
+          </button>
+          <button id="closeRawBtn" type="button" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs px-3 py-2 rounded-lg transition">
+            বন্ধ করুন
+          </button>
+        </div>
+      </div>
     </div>
+
+    <!-- Main Workspace Grid -->
+    <main id="workspaceGrid" class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-5 p-4 sm:p-6 w-full max-w-[1920px] mx-auto">
+      
+      <!-- LEFT / MAIN FORM AREA (8 Cols or 12 Cols in Zen) -->
+      <form id="senderForm" class="lg:col-span-8 bg-[#0F172A] border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-xl flex flex-col gap-4">
+        
+        <!-- STEP 1: PHOTO URLS -->
+        <div class="bg-slate-950/60 border border-slate-800/80 rounded-xl p-4 space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="text-xs font-bold uppercase tracking-wider text-sky-400 flex items-center gap-1.5">
+              <span>📸</span> 1. Photo(s) / Image Link(s) <span class="text-slate-500 font-normal lowercase">(optional - sent first)</span>
+            </label>
+            <span id="photoBadge" class="text-[11px] font-mono text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
+              0 Photos
+            </span>
+          </div>
+          <textarea
+            id="imageUrls"
+            rows="2"
+            placeholder="ছবির লিংক এখানে দিন (একটি বা একাধিক লিংক দিতে পারেন, কমা অথবা নতুন লাইনে আলাদা করুন)&#10;যেমন: https://images.unsplash.com/... or https://i.imgur.com/..."
+            class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-mono text-sky-200 placeholder-slate-600 focus:outline-none focus:border-sky-400 transition"
+          ></textarea>
+
+          <!-- Live Image Thumbnails -->
+          <div id="imageThumbnailsContainer" class="hidden pt-2 flex flex-wrap gap-2.5"></div>
+        </div>
+
+        <!-- STEP 2: METADATA ROW (Headline, Product Name, Product Code) -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-3.5">
+          <!-- Headline -->
+          <div class="md:col-span-5">
+            <label class="block text-xs font-bold uppercase tracking-wider text-white mb-1.5 flex items-center justify-between">
+              <span>2. Title / Headline *</span>
+              <span class="text-[10px] text-sky-400 font-normal">Auto-Uppercase</span>
+            </label>
+            <input type="text" id="headline" required placeholder="e.g. FLASH SALE OFFER" class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-4 py-2.5 text-sm font-semibold text-white focus:outline-none focus:border-sky-400 uppercase tracking-wide transition" />
+          </div>
+
+          <!-- Product Name -->
+          <div class="md:col-span-4">
+            <label class="block text-xs font-bold uppercase tracking-wider text-amber-400 mb-1.5">
+              Product Name (Optional)
+            </label>
+            <input type="text" id="productName" placeholder="e.g. Premium Wireless Earbuds" class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-4 py-2.5 text-sm font-medium text-amber-200 focus:outline-none focus:border-sky-400 transition" />
+          </div>
+
+          <!-- Product Code -->
+          <div class="md:col-span-3">
+            <label class="block text-xs font-bold uppercase tracking-wider text-emerald-400 mb-1.5 flex items-center justify-between">
+              <span>Code *</span>
+              <span class="text-[10px] text-emerald-400 font-mono">1-Click Copy</span>
+            </label>
+            <input type="text" id="productCode" required placeholder="e.g. SKU-8802" class="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-4 py-2.5 text-sm font-mono font-semibold text-emerald-300 focus:outline-none focus:border-sky-400 uppercase transition" />
+          </div>
+        </div>
+
+        <!-- STEP 3: BODY SECTIONS EDITOR -->
+        <div class="flex-1 flex flex-col pt-1">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+            <div class="flex items-center gap-3">
+              <label class="text-xs sm:text-sm font-bold uppercase tracking-wider text-white flex items-center gap-1.5">
+                <span>💬</span> 3. Body Sections *
+              </label>
+              <span id="charCountBadge" class="text-xs text-slate-400 font-mono bg-slate-900 px-2.5 py-0.5 rounded-md border border-slate-800">
+                0 chars • 0 sections
+              </span>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <button type="button" id="insertDelimiterBtn" class="text-xs bg-sky-600/20 hover:bg-sky-600/30 text-sky-300 font-semibold px-3 py-1.5 rounded-lg border border-sky-500/30 transition">
+                ➕ Insert Delimiter (---)
+              </button>
+              <button type="button" id="fontSizeBtn" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1.5 rounded-lg border border-slate-700 transition">
+                🔠 Text Size
+              </button>
+            </div>
+          </div>
+
+          <textarea
+            id="bodyText"
+            required
+            placeholder="এখানে আপনার মেসেজের সেকশনগুলো লিখুন বা পেস্ট করুন...&#10;&#10;একটি সেকশন থেকে আরেকটি সেকশন আলাদা করতে মাঝখানে --- (Delimiter) ব্যবহার করুন।&#10;---&#10;দ্বিতীয় সেকশনের টেক্সট এখানে থাকবে...&#10;---&#10;তৃতীয় সেকশনের টেক্সট এখানে থাকবে..."
+            class="w-full flex-1 min-h-[380px] lg:min-h-[460px] bg-slate-950 border-2 border-slate-800 focus:border-sky-500 rounded-2xl p-4 sm:p-5 text-sm sm:text-base leading-relaxed text-slate-100 font-mono focus:outline-none resize-y shadow-inner transition"
+          ></textarea>
+        </div>
+
+        <!-- SETTINGS & SUBMIT -->
+        <div class="space-y-3 pt-2 border-t border-slate-800/80">
+          
+          <!-- Advanced Settings Accordion -->
+          <details class="bg-slate-950/70 border border-slate-800/80 rounded-xl px-4 py-2.5">
+            <summary class="text-xs font-semibold text-slate-300 cursor-pointer select-none flex items-center justify-between">
+              <span>⚙️ Advanced Settings & Topic Override</span>
+              <span class="text-[11px] text-slate-500">Emoji, Pin, Target Override</span>
+            </summary>
+            
+            <div class="mt-3 pt-3 border-t border-slate-800/80 space-y-3">
+              <!-- Inputs Row -->
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div>
+                  <label class="block text-xs text-slate-400 mb-1">Headline Emoji</label>
+                  <input type="text" id="emoji" value="📌" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs sm:text-sm text-white" />
+                </div>
+                <div>
+                  <label class="block text-xs text-slate-400 mb-1">Section Delimiter</label>
+                  <input type="text" id="delimiter" value="---" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs sm:text-sm text-white font-mono" />
+                </div>
+                <div>
+                  <label class="block text-xs text-slate-400 mb-1">Override Chat ID</label>
+                  <input type="text" id="customChatId" placeholder=".env default" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs sm:text-sm text-white font-mono" />
+                </div>
+                <div>
+                  <label class="block text-xs text-slate-400 mb-1">Override Topic ID</label>
+                  <input type="text" id="customTopicId" placeholder=".env default" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs sm:text-sm text-white font-mono" />
+                </div>
+              </div>
+
+              <!-- Toggles Row -->
+              <div class="flex flex-wrap items-center gap-5 pt-2 text-xs text-slate-300 border-t border-slate-800/40">
+                <label class="flex items-center gap-2 cursor-pointer select-none hover:text-white">
+                  <input type="checkbox" id="pinHeader" class="rounded bg-slate-900 border-slate-700 text-sky-500 focus:ring-0" />
+                  <span>📌 Pin Header Message in Topic</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer select-none hover:text-white">
+                  <input type="checkbox" id="silentSend" class="rounded bg-slate-900 border-slate-700 text-sky-500 focus:ring-0" />
+                  <span>🔕 Send Silently (No notification sound)</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer select-none hover:text-white">
+                  <input type="checkbox" id="showIndexToggle" class="rounded bg-slate-900 border-slate-700 text-sky-500 focus:ring-0" />
+                  <span>🔢 Add [Part 1/N] badges to sections</span>
+                </label>
+              </div>
+            </div>
+          </details>
+
+          <!-- Status Alert Box -->
+          <div id="statusBox" class="hidden rounded-xl p-4 text-sm font-medium"></div>
+
+          <!-- Submit Button -->
+          <button type="submit" id="submitBtn" class="w-full bg-sky-600 hover:bg-sky-500 active:bg-sky-700 text-white font-bold text-sm sm:text-base py-3.5 px-6 rounded-xl shadow-lg shadow-sky-600/25 transition duration-200 flex items-center justify-center gap-2">
+            <span>🚀 Send Photos, Header & Sections to Telegram</span>
+          </button>
+        </div>
+      </form>
+
+      <!-- RIGHT COLUMN: LIVE TELEGRAM DISPATCH PREVIEW -->
+      <aside id="previewPanel" class="lg:col-span-4 bg-[#0F172A] border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl flex flex-col max-h-[88vh] lg:sticky lg:top-20">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-3">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+            <span>📱</span> Live Dispatch Order
+          </h2>
+          <span id="previewSummaryBadge" class="text-[11px] bg-sky-500/10 text-sky-300 border border-sky-500/20 px-2.5 py-0.5 rounded-full font-bold">
+            0 Messages
+          </span>
+        </div>
+
+        <div id="previewContainer" class="space-y-3 overflow-y-auto pr-1 flex-1">
+          <!-- Dynamically populated -->
+        </div>
+      </aside>
+
+    </main>
   </div>
 
   <script>
-    const passwordEl = document.getElementById('password');
+    // DOM Element References
+    const loginScreen = document.getElementById('loginScreen');
+    const appScreen = document.getElementById('appScreen');
+    const loginForm = document.getElementById('loginForm');
+    const loginPasswordInput = document.getElementById('loginPasswordInput');
+    const loginErrorBox = document.getElementById('loginErrorBox');
+    const loginBtn = document.getElementById('loginBtn');
+    const togglePassView = document.getElementById('togglePassView');
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    const senderForm = document.getElementById('senderForm');
+    const previewPanel = document.getElementById('previewPanel');
+    const toggleZenBtn = document.getElementById('toggleZenBtn');
+    const fontSizeBtn = document.getElementById('fontSizeBtn');
+    const charCountBadge = document.getElementById('charCountBadge');
+    const photoBadge = document.getElementById('photoBadge');
+
     const imageUrlsEl = document.getElementById('imageUrls');
+    const imageThumbnailsContainer = document.getElementById('imageThumbnailsContainer');
     const headlineEl = document.getElementById('headline');
     const productNameEl = document.getElementById('productName');
     const productCodeEl = document.getElementById('productCode');
@@ -164,101 +296,262 @@
     const delimiterEl = document.getElementById('delimiter');
     const customChatIdEl = document.getElementById('customChatId');
     const customTopicIdEl = document.getElementById('customTopicId');
+    const pinHeaderEl = document.getElementById('pinHeader');
+    const silentSendEl = document.getElementById('silentSend');
+    const showIndexToggleEl = document.getElementById('showIndexToggle');
+
     const previewContainer = document.getElementById('previewContainer');
-    const sectionCounter = document.getElementById('sectionCounter');
+    const previewSummaryBadge = document.getElementById('previewSummaryBadge');
     const statusBox = document.getElementById('statusBox');
     const submitBtn = document.getElementById('submitBtn');
 
-    // Remember password in localStorage
-    if (localStorage.getItem('tg_admin_pass')) {
-      passwordEl.value = localStorage.getItem('tg_admin_pass');
+    const STORAGE_KEYS = {
+      PASS: 'tg_saved_admin_password',
+      DRAFT: 'tg_saved_form_draft_v3',
+      ZEN: 'tg_zen_fullscreen_mode'
+    };
+
+    let isLargeFont = false;
+    let isZenMode = false;
+
+    // Toggle Fullscreen Zen Mode
+    function applyZenMode(enable) {
+      isZenMode = enable;
+      if (isZenMode) {
+        previewPanel.classList.add('hidden');
+        senderForm.classList.remove('lg:col-span-8');
+        senderForm.classList.add('lg:col-span-12');
+        toggleZenBtn.textContent = '📱 Show Preview';
+      } else {
+        previewPanel.classList.remove('hidden');
+        senderForm.classList.remove('lg:col-span-12');
+        senderForm.classList.add('lg:col-span-8');
+        toggleZenBtn.textContent = '⛶ Full Editor';
+      }
+      localStorage.setItem(STORAGE_KEYS.ZEN, isZenMode ? '1' : '0');
     }
 
-    // Toggle Raw Quick Paste Box
-    document.getElementById('toggleRawBtn').addEventListener('click', () => {
-      document.getElementById('rawImportBox').classList.toggle('hidden');
+    toggleZenBtn.addEventListener('click', () => applyZenMode(!isZenMode));
+
+    // Toggle Font Size in Textarea
+    fontSizeBtn.addEventListener('click', () => {
+      isLargeFont = !isLargeFont;
+      if (isLargeFont) {
+        bodyTextEl.classList.remove('text-sm', 'sm:text-base');
+        bodyTextEl.classList.add('text-base', 'sm:text-lg');
+        fontSizeBtn.textContent = '🔠 Large (On)';
+      } else {
+        bodyTextEl.classList.remove('text-base', 'sm:text-lg');
+        bodyTextEl.classList.add('text-sm', 'sm:text-base');
+        fontSizeBtn.textContent = '🔠 Text Size';
+      }
     });
 
-    // Helper: Parse Image URLs
-    function extractUrls(input) {
-      if (!input) return [];
-      return input
-        .replace(/\r\n/g, '\n')
+    // Password visibility toggle
+    togglePassView.addEventListener('click', () => {
+      if (loginPasswordInput.type === 'password') {
+        loginPasswordInput.type = 'text';
+        togglePassView.textContent = 'Hide';
+      } else {
+        loginPasswordInput.type = 'password';
+        togglePassView.textContent = 'Show';
+      }
+    });
+
+    // Extract photo URLs from textarea
+    function getParsedImageUrls() {
+      const raw = imageUrlsEl.value.trim();
+      if (!raw) return [];
+      return raw
         .split(/[\n,]+/)
-        .map(s => s.trim())
-        .filter(Boolean)
-        .flatMap(part => part.split(/\s+/).map(s => s.trim()).filter(Boolean))
-        .map(url => url.replace(/^(image|img):\s*/i, ''))
-        .filter(url => /^https?:\/\//i.test(url));
+        .map(u => u.trim())
+        .filter(u => u.startsWith('http://') || u.startsWith('https://'));
     }
 
-    // Parse Raw Quick Paste text into fields
-    document.getElementById('applyRawBtn').addEventListener('click', () => {
-      const raw = document.getElementById('rawTextInput').value.replace(/\r\n/g, '\n').trim();
-      const delim = delimiterEl.value || '---';
-      const allLines = raw.split('\n');
-
-      let lineIdx = 0;
-      const foundImages = [];
-
-      // Detect leading image URLs
-      while (lineIdx < allLines.length) {
-        const line = allLines[lineIdx].trim();
-        if (!line) { lineIdx++; continue; }
-        const words = line.split(/[\s,]+/).map(w => w.trim()).filter(Boolean);
-        const isUrlLine = words.length > 0 && words.every(w => /^https?:\/\//i.test(w) || /^image:/i.test(w) || /^img:/i.test(w));
-        if (isUrlLine) {
-          for (const w of words) {
-            const cleanUrl = w.replace(/^(image|img):\s*/i, '');
-            if (/^https?:\/\//i.test(cleanUrl)) foundImages.push(cleanUrl);
-          }
-          lineIdx++;
-        } else {
-          break;
-        }
-      }
-
-      const remainingLines = allLines.slice(lineIdx);
-      const nonEmpty = remainingLines.filter(l => l.trim().length > 0 || l.includes(delim));
-
-      if (nonEmpty.length < 2) {
-        alert('Please provide at least Title, Product Code, and Section content.');
+    // Render Thumbnail previews for images
+    function updateThumbnails(urls) {
+      photoBadge.textContent = `${urls.length} Photo${urls.length === 1 ? '' : 's'}`;
+      if (urls.length === 0) {
+        imageThumbnailsContainer.classList.add('hidden');
+        imageThumbnailsContainer.innerHTML = '';
         return;
       }
+      imageThumbnailsContainer.classList.remove('hidden');
+      imageThumbnailsContainer.innerHTML = urls.map((url, idx) => `
+        <div class="relative group bg-slate-900 border border-slate-700/80 rounded-lg p-1 w-20 h-20 flex flex-col items-center justify-center overflow-hidden">
+          <img src="${escapeHTML(url)}" alt="Thumb" class="w-full h-full object-cover rounded" onerror="this.src=''; this.alt='Invalid URL'; this.className='text-[9px] text-rose-400 text-center p-1';" />
+          <span class="absolute bottom-1 right-1 bg-black/70 text-[9px] text-white px-1 rounded font-mono">#${idx + 1}</span>
+        </div>
+      `).join('');
+    }
 
-      imageUrlsEl.value = foundImages.join('\n');
-      headlineEl.value = nonEmpty[0].trim().replace(/^(title|headline|name|product\s*name):\s*/i, '');
+    // Save Draft
+    function saveDraftToLocal() {
+      const draft = {
+        imageUrls: imageUrlsEl.value,
+        headline: headlineEl.value,
+        productName: productNameEl.value,
+        productCode: productCodeEl.value,
+        bodyText: bodyTextEl.value,
+        emoji: emojiEl.value,
+        delimiter: delimiterEl.value,
+        customChatId: customChatIdEl.value,
+        customTopicId: customTopicIdEl.value,
+        pinHeader: pinHeaderEl.checked,
+        silentSend: silentSendEl.checked,
+        showIndex: showIndexToggleEl.checked,
+      };
+      localStorage.setItem(STORAGE_KEYS.DRAFT, JSON.stringify(draft));
+    }
 
-      const line1 = nonEmpty[1].trim();
-      if (/^(code|product\s*code|sku):\s*/i.test(line1)) {
-        productCodeEl.value = line1.replace(/^(code|product\s*code|sku):\s*/i, '');
-        productNameEl.value = '';
-        bodyTextEl.value = nonEmpty.slice(2).join('\n').trim();
-      } else if (/^(name|product\s*name):\s*/i.test(line1)) {
-        productNameEl.value = line1.replace(/^(name|product\s*name):\s*/i, '');
-        if (nonEmpty.length > 2) {
-          productCodeEl.value = nonEmpty[2].trim().replace(/^(code|product\s*code|sku):\s*/i, '');
-          bodyTextEl.value = nonEmpty.slice(3).join('\n').trim();
-        }
-      } else {
-        // Standard 2 header lines: Line 1 = Title, Line 2 = Code
-        productCodeEl.value = line1;
-        productNameEl.value = '';
-        bodyTextEl.value = nonEmpty.slice(2).join('\n').trim();
+    // Load Draft
+    function loadDraftFromLocal() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEYS.DRAFT);
+        if (!raw) return;
+        const draft = JSON.parse(raw);
+        if (draft.imageUrls !== undefined) imageUrlsEl.value = draft.imageUrls;
+        if (draft.headline !== undefined) headlineEl.value = draft.headline;
+        if (draft.productName !== undefined) productNameEl.value = draft.productName;
+        if (draft.productCode !== undefined) productCodeEl.value = draft.productCode;
+        if (draft.bodyText !== undefined) bodyTextEl.value = draft.bodyText;
+        if (draft.emoji !== undefined) emojiEl.value = draft.emoji;
+        if (draft.delimiter !== undefined) delimiterEl.value = draft.delimiter;
+        if (draft.customChatId !== undefined) customChatIdEl.value = draft.customChatId;
+        if (draft.customTopicId !== undefined) customTopicIdEl.value = draft.customTopicId;
+        if (draft.pinHeader !== undefined) pinHeaderEl.checked = draft.pinHeader;
+        if (draft.silentSend !== undefined) silentSendEl.checked = draft.silentSend;
+        if (draft.showIndex !== undefined) showIndexToggleEl.checked = draft.showIndex;
+      } catch (e) {
+        console.error('Failed to load draft:', e);
       }
+    }
 
-      document.getElementById('rawImportBox').classList.add('hidden');
+    function showDashboard() {
+      loginScreen.classList.add('hidden');
+      appScreen.classList.remove('hidden');
+      loadDraftFromLocal();
+      if (localStorage.getItem(STORAGE_KEYS.ZEN) === '1') {
+        applyZenMode(true);
+      }
+      updatePreview();
+    }
+
+    function showLogin(errorMsg = '') {
+      appScreen.classList.add('hidden');
+      loginScreen.classList.remove('hidden');
+      if (errorMsg) {
+        loginErrorBox.textContent = `❌ ${errorMsg}`;
+        loginErrorBox.classList.remove('hidden');
+      } else {
+        loginErrorBox.classList.add('hidden');
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedPass = localStorage.getItem(STORAGE_KEYS.PASS);
+      if (savedPass) {
+        showDashboard();
+      }
+    });
+
+    // Login Form Submit
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      loginErrorBox.classList.add('hidden');
+      const pass = loginPasswordInput.value.trim();
+      if (!pass) return;
+
+      loginBtn.disabled = true;
+      loginBtn.textContent = '⏳ Verifying Password...';
+
+      try {
+        const res = await fetch('/api/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'verify', password: pass })
+        });
+        const data = await res.json();
+
+        if (res.ok && data.ok) {
+          localStorage.setItem(STORAGE_KEYS.PASS, pass);
+          showDashboard();
+        } else {
+          showLogin(data.error || 'পাসওয়ার্ড মেলেনি!');
+        }
+      } catch (err) {
+        showLogin('সার্ভারের সাথে কানেক্ট করা যাচ্ছে না।');
+      } finally {
+        loginBtn.disabled = false;
+        loginBtn.textContent = '🚀 Login to Workspace';
+      }
+    });
+
+    // Logout
+    logoutBtn.addEventListener('click', () => {
+      localStorage.removeItem(STORAGE_KEYS.PASS);
+      loginPasswordInput.value = '';
+      showLogin();
+    });
+
+    // Clear form
+    document.getElementById('clearFormBtn').addEventListener('click', () => {
+      if (!confirm('আপনি কি ফর্মের সব লেখা মুছে ফেলতে চান?')) return;
+      imageUrlsEl.value = '';
+      headlineEl.value = '';
+      productNameEl.value = '';
+      productCodeEl.value = '';
+      bodyTextEl.value = '';
+      saveDraftToLocal();
       updatePreview();
     });
 
-    // Insert delimiter button
+    // Quick Paste Toggle
+    document.getElementById('toggleRawBtn').addEventListener('click', () => {
+      document.getElementById('rawImportBox').classList.toggle('hidden');
+    });
+    document.getElementById('closeRawBtn').addEventListener('click', () => {
+      document.getElementById('rawImportBox').classList.add('hidden');
+    });
+
+    // Quick Multi-Line Paste Parser
+    document.getElementById('applyRawBtn').addEventListener('click', () => {
+      const raw = document.getElementById('rawTextInput').value.replace(/\r\n/g, '\n').trim();
+      const lines = raw.split('\n');
+      if (lines.length < 3) {
+        alert('কমপক্ষে ৩ লাইন থাকতে হবে (Line 1: Headline, Line 2: Name, Line 3: Code, Line 4+: Body).');
+        return;
+      }
+      headlineEl.value = lines[0].trim();
+      productNameEl.value = lines[1].trim();
+      productCodeEl.value = lines[2].trim();
+
+      let bodyStartIndex = 3;
+      if (lines.length > 3) {
+        const l4 = lines[3].trim();
+        if (l4.startsWith('http://') || l4.startsWith('https://') || l4.toLowerCase().startsWith('img:') || l4.toLowerCase().startsWith('image:')) {
+          imageUrlsEl.value = l4.replace(/^img:|^image:/i, '').trim();
+          bodyStartIndex = 4;
+        }
+      }
+
+      bodyTextEl.value = lines.slice(bodyStartIndex).join('\n').trim();
+      document.getElementById('rawImportBox').classList.add('hidden');
+      saveDraftToLocal();
+      updatePreview();
+    });
+
+    // Insert Delimiter Button
     document.getElementById('insertDelimiterBtn').addEventListener('click', () => {
       const delim = delimiterEl.value || '---';
       const start = bodyTextEl.selectionStart;
       const end = bodyTextEl.selectionEnd;
       const current = bodyTextEl.value;
-      bodyTextEl.value = current.substring(0, start) + `\n${delim}\n` + current.substring(end);
+      const insertion = `\n${delim}\n`;
+      bodyTextEl.value = current.substring(0, start) + insertion + current.substring(end);
       bodyTextEl.focus();
+      bodyTextEl.selectionStart = bodyTextEl.selectionEnd = start + insertion.length;
+      saveDraftToLocal();
       updatePreview();
     });
 
@@ -269,141 +562,205 @@
         .replace(/>/g, '&gt;');
     }
 
+    // Copy to clipboard helper
+    window.copySectionText = function(btn, encodedText) {
+      const text = decodeURIComponent(encodedText);
+      navigator.clipboard.writeText(text).then(() => {
+        const orig = btn.innerHTML;
+        btn.innerHTML = '✅ Copied!';
+        setTimeout(() => { btn.innerHTML = orig; }, 1500);
+      });
+    };
+
+    // Live Telegram Dispatch Preview Builder
     function updatePreview() {
-      const images = extractUrls(imageUrlsEl.value);
-      const headline = headlineEl.value.trim().toUpperCase() || 'TITLE / HEADLINE';
-      const productCode = productCodeEl.value.trim().toUpperCase() || 'PROD-CODE';
+      const photoUrls = getParsedImageUrls();
+      updateThumbnails(photoUrls);
+
+      const headline = headlineEl.value.trim().toUpperCase() || 'HEADLINE HERE';
       const productName = productNameEl.value.trim().toUpperCase();
+      const productCode = productCodeEl.value.trim().toUpperCase() || 'PROD-CODE-123';
       const emoji = emojiEl.value || '📌';
       const delimiter = delimiterEl.value || '---';
       const rawBody = bodyTextEl.value;
+      const showPartIndex = showIndexToggleEl.checked;
 
       const sections = rawBody
         .split(delimiter)
         .map(s => s.trim())
         .filter(s => s.length > 0);
 
-      const totalMessages = (images.length > 0 ? 1 : 0) + 1 + sections.length;
-      sectionCounter.textContent = `${totalMessages} Telegram Message${totalMessages === 1 ? '' : 's'}`;
+      const totalPhotos = photoUrls.length;
+      const totalSections = sections.length;
+      const totalMessages = (totalPhotos > 0 ? 1 : 0) + 1 + totalSections;
 
-      if (images.length === 0 && !headlineEl.value && !productCodeEl.value && sections.length === 0) {
-        previewContainer.innerHTML = `<p class="text-slate-500 text-sm italic text-center py-12">Start typing on the left to preview how your messages will be sequenced in Telegram...</p>`;
+      charCountBadge.textContent = `${rawBody.length} chars • ${totalSections} section${totalSections === 1 ? '' : 's'}`;
+      previewSummaryBadge.textContent = `${totalPhotos ? totalPhotos + ' Photo(s) + ' : ''}1 Header + ${totalSections} Section(s)`;
+
+      if (sections.length === 0 && !headlineEl.value && !productCodeEl.value && totalPhotos === 0) {
+        previewContainer.innerHTML = `
+          <div class="text-slate-500 text-xs italic text-center py-16 space-y-2">
+            <span class="text-3xl block">📨</span>
+            <p>ফর্ম পূরণ করলে এখানে টেলিগ্রামে মেসেজগুলো কোন ক্রমানুসারে যাবে তার লাইভ প্রিভিউ দেখা যাবে...</p>
+          </div>
+        `;
         return;
       }
 
-      let html = '';
-      let msgNum = 1;
+      const cards = [];
+      let messageNumber = 1;
 
-      // 1. Photo Message Preview (if any)
-      if (images.length > 0) {
-        html += `
-          <div class="bg-slate-900 border border-sky-500/40 rounded-xl p-3.5 text-xs space-y-2 shadow">
-            <div class="text-[10px] text-sky-400 font-bold uppercase tracking-wider flex items-center justify-between">
-              <span>Message #${msgNum++} • 🖼️ Photo(s) (${images.length})</span>
-              <span class="bg-sky-500/20 text-sky-300 px-2 py-0.5 rounded text-[9px]">DIRECT PHOTO</span>
+      // 1. Photos Message Preview (if any)
+      if (totalPhotos > 0) {
+        cards.push(`
+          <div class="bg-slate-950 border border-sky-500/30 rounded-xl p-3.5 space-y-2 shadow-lg">
+            <div class="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-sky-400">
+              <span class="flex items-center gap-1.5">🖼️ Message #${messageNumber++} — PHOTO DISPATCH</span>
+              <span class="bg-sky-500/20 text-sky-300 px-2 py-0.5 rounded text-[10px]">${totalPhotos} Photo${totalPhotos > 1 ? 's' : ''}</span>
             </div>
-            <div class="grid grid-cols-${images.length > 1 ? '2' : '1'} gap-2 pt-1">
-              ${images.slice(0, 4).map(u => `
-                <div class="relative bg-slate-950 rounded-lg overflow-hidden border border-slate-800 aspect-video flex items-center justify-center">
-                  <img src="${escapeHTML(u)}" alt="Photo preview" class="w-full h-full object-cover" onerror="this.onerror=null; this.parentElement.innerHTML='<span class=\'text-[10px] text-slate-500 p-2 truncate\'>🖼️ ${escapeHTML(u)}</span>'" />
-                </div>
+            <div class="grid grid-cols-${Math.min(totalPhotos, 3)} gap-1.5 rounded-lg overflow-hidden border border-slate-800 p-1 bg-slate-900/50">
+              ${photoUrls.slice(0, 6).map(u => `
+                <img src="${escapeHTML(u)}" alt="Photo" class="h-20 w-full object-cover rounded" onerror="this.style.display='none'" />
               `).join('')}
             </div>
-            ${images.length > 4 ? `<div class="text-[10px] text-slate-400 italic text-right">+${images.length - 4} more photos (album)</div>` : ''}
+            <p class="text-[11px] text-slate-400">এই ছবিগুলো টেলিগ্রামে সবার আগে পৌঁছাবে।</p>
           </div>
-        `;
+        `);
       }
 
-      // 2. Header Message Preview (Title & Product Code UPPERCASE)
-      html += `
-        <div class="bg-slate-900 border border-amber-500/40 rounded-xl p-3.5 text-xs space-y-1.5 shadow">
-          <div class="text-[10px] text-amber-400 font-bold uppercase tracking-wider flex items-center justify-between">
-            <span>Message #${msgNum++} • 🏷️ Header (Uppercase)</span>
-            <span class="bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded text-[9px]">TITLE & CODE</span>
+      // 2. Uppercase Header Card Preview
+      cards.push(`
+        <div class="bg-slate-950 border border-amber-500/30 rounded-xl p-3.5 space-y-2 shadow-lg">
+          <div class="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-amber-400">
+            <span>📌 Message #${messageNumber++} — UPPERCASE HEADER</span>
+            <span class="text-[10px] text-slate-500 font-mono">1-Click Copy</span>
           </div>
-          <div class="font-bold text-white text-sm pt-1">
+          <div class="font-extrabold text-white text-sm sm:text-base tracking-wide">
             ${escapeHTML(emoji)} ${escapeHTML(headline)} ${escapeHTML(emoji)}
           </div>
           ${productName ? `
-            <div class="pt-1">
-              📦 <span class="font-semibold text-slate-300">PRODUCT NAME:</span>
-              <code class="bg-slate-800 text-amber-300 px-1.5 py-0.5 rounded border border-slate-700">${escapeHTML(productName)}</code>
-            </div>
-          ` : ''}
-          <div>
-            🔖 <span class="font-semibold text-slate-300">PRODUCT CODE:</span>
-            <code class="bg-slate-800 text-amber-300 px-1.5 py-0.5 rounded border border-slate-700 font-mono font-bold">${escapeHTML(productCode)}</code>
+          <div class="pt-0.5 text-xs text-slate-300">
+            📦 <span class="font-bold text-slate-200">PRODUCT NAME:</span>
+            <code class="bg-slate-900 text-amber-300 px-1.5 py-0.5 rounded border border-slate-800 font-mono font-bold">${escapeHTML(productName)}</code>
+          </div>` : ''}
+          <div class="text-xs text-slate-300">
+            🔖 <span class="font-bold text-slate-200">PRODUCT CODE:</span>
+            <code class="bg-slate-900 text-emerald-300 px-1.5 py-0.5 rounded border border-slate-800 font-mono font-bold">${escapeHTML(productCode)}</code>
           </div>
         </div>
-      `;
+      `);
 
-      // 3. Section Messages Preview (Without repeated header/product code)
-      const sectionItems = sections.length > 0 ? sections : ['Section content will appear here inside a clean 1-click copyable block...'];
-      sectionItems.forEach((sec, idx) => {
-        html += `
-          <div class="bg-slate-900 border border-slate-700/80 rounded-xl p-3.5 text-xs space-y-1.5 shadow">
-            <div class="text-[10px] text-emerald-400 font-semibold uppercase tracking-wider flex items-center justify-between">
-              <span>Message #${msgNum++} • Section ${idx + 1}</span>
-              <span class="bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded text-[9px]">1-CLICK COPY</span>
+      // 3. Clean Individual Section Messages Preview
+      const renderedSections = sections.length ? sections : ['আপনার সেকশনের কন্টেন্ট এখানে থাকবে...'];
+      renderedSections.forEach((sec, idx) => {
+        const encoded = encodeURIComponent(sec);
+        cards.push(`
+          <div class="bg-slate-950 border border-slate-800 hover:border-slate-700 rounded-xl p-3.5 space-y-1.5 shadow transition">
+            <div class="flex items-center justify-between text-[10px] text-emerald-400 font-semibold uppercase tracking-wider">
+              <span>💬 Message #${messageNumber++} — Section ${idx + 1} of ${renderedSections.length}</span>
+              <button type="button" onclick="copySectionText(this, '${encoded}')" class="text-[10px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-0.5 rounded transition">
+                📋 Copy
+              </button>
             </div>
-            <pre class="bg-slate-950 text-emerald-300 p-2.5 rounded-lg border border-slate-800 overflow-x-auto whitespace-pre-wrap font-mono select-all">${escapeHTML(sec)}</pre>
+            ${showPartIndex && renderedSections.length > 1 ? `<div class="text-xs font-bold text-sky-400">[Part ${idx + 1}/${renderedSections.length}]</div>` : ''}
+            <pre class="bg-slate-900/90 text-emerald-300 p-3 rounded-lg border border-slate-800 overflow-x-auto whitespace-pre-wrap font-mono text-xs leading-relaxed select-all cursor-pointer" title="Click to select all">${escapeHTML(sec)}</pre>
+            <div class="text-[10px] text-slate-500 italic">⚠️ সেকশনে কোনো হেডার বা প্রোডাক্ট কোড পুনরাবৃত্তি থাকবে না।</div>
           </div>
-        `;
+        `);
       });
 
-      previewContainer.innerHTML = html;
+      previewContainer.innerHTML = cards.join('');
     }
 
-    [imageUrlsEl, headlineEl, productNameEl, productCodeEl, bodyTextEl, emojiEl, delimiterEl].forEach(el => {
-      el.addEventListener('input', updatePreview);
+    // Auto-save & re-render on input changes
+    [
+      imageUrlsEl,
+      headlineEl,
+      productNameEl,
+      productCodeEl,
+      bodyTextEl,
+      emojiEl,
+      delimiterEl,
+      customChatIdEl,
+      customTopicIdEl,
+      pinHeaderEl,
+      silentSendEl,
+      showIndexToggleEl
+    ].forEach(el => {
+      el.addEventListener('input', () => {
+        saveDraftToLocal();
+        updatePreview();
+      });
+      el.addEventListener('change', () => {
+        saveDraftToLocal();
+        updatePreview();
+      });
     });
 
-    // Handle Form Submission
-    document.getElementById('senderForm').addEventListener('submit', async (e) => {
+    // Handle Send Submission
+    senderForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       statusBox.classList.add('hidden');
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = `<span>⏳ Sending Messages... Please wait</span>`;
+      const savedPassword = localStorage.getItem(STORAGE_KEYS.PASS);
 
-      localStorage.setItem('tg_admin_pass', passwordEl.value);
+      if (!savedPassword) {
+        showLogin('অনুগ্রহ করে আবার লগইন করুন।');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<span>⏳ ছবি, হেডার ও সেকশন পাঠানো হচ্ছে... অপেক্ষা করুন</span>`;
 
       try {
         const response = await fetch('/api/send', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            password: passwordEl.value,
+            password: savedPassword,
             imageUrls: imageUrlsEl.value,
             headline: headlineEl.value,
-            productCode: productCodeEl.value,
             productName: productNameEl.value,
+            productCode: productCodeEl.value,
             bodyText: bodyTextEl.value,
             emoji: emojiEl.value,
             delimiter: delimiterEl.value,
             customChatId: customChatIdEl.value,
             customTopicId: customTopicIdEl.value,
+            pinHeader: pinHeaderEl.checked,
+            silent: silentSendEl.checked,
+            showIndex: showIndexToggleEl.checked,
           }),
         });
 
         const data = await response.json();
 
+        if (response.status === 401) {
+          localStorage.removeItem(STORAGE_KEYS.PASS);
+          showLogin(data.error);
+          return;
+        }
+
         statusBox.classList.remove('hidden');
         if (response.ok && data.ok) {
-          statusBox.className = 'rounded-xl p-3.5 text-sm font-medium bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
-          statusBox.textContent = `✅ ${data.message}`;
+          statusBox.className = 'rounded-xl p-4 text-sm font-medium bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 space-y-1';
+          statusBox.innerHTML = `
+            <div>✅ <b>সফলভাবে সম্পন্ন হয়েছে!</b></div>
+            <div class="text-xs text-emerald-200/90">${escapeHTML(data.message)}</div>
+          `;
           bodyTextEl.value = '';
+          saveDraftToLocal();
           updatePreview();
         } else {
-          statusBox.className = 'rounded-xl p-3.5 text-sm font-medium bg-rose-500/20 text-rose-300 border border-rose-500/40';
-          statusBox.textContent = `❌ ${data.error || 'Something went wrong.'}`;
+          statusBox.className = 'rounded-xl p-4 text-sm font-medium bg-rose-500/20 text-rose-300 border border-rose-500/40';
+          statusBox.textContent = `❌ ${data.error || 'কিছু একটা সমস্যা হয়েছে।'}`;
         }
       } catch (err) {
         statusBox.classList.remove('hidden');
-        statusBox.className = 'rounded-xl p-3.5 text-sm font-medium bg-rose-500/20 text-rose-300 border border-rose-500/40';
+        statusBox.className = 'rounded-xl p-4 text-sm font-medium bg-rose-500/20 text-rose-300 border border-rose-500/40';
         statusBox.textContent = `❌ Network error: ${err.message}`;
       } finally {
         submitBtn.disabled = false;
-        submitBtn.innerHTML = `<span>🚀 Send Messages to Telegram Topic</span>`;
+        submitBtn.innerHTML = `<span>🚀 Send Photos, Header & Sections to Telegram</span>`;
       }
     });
   </script>
