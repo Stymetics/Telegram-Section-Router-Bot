@@ -32,6 +32,15 @@ function escapeHTML(text) {
     .replace(/>/g, '&gt;');
 }
 
+function formatHref(url) {
+  if (!url) return '';
+  let trimmed = String(url).trim();
+  if (!/^https?:\/\//i.test(trimmed)) {
+    trimmed = 'https://' + trimmed;
+  }
+  return trimmed;
+}
+
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
@@ -58,9 +67,9 @@ function chunkText(text, maxLen = 3900) {
  * Parses raw input text according to the protocol:
  * Line 1: Headline
  * Line 2: Product Name
- * Line 3: Product Code
- * Line 4: (Optional) Image Link(s) or start of body sections
- * Line 5+: Body sections separated by delimiter
+ * Line 3: Product Code (SKU)
+ * Optional lines: Costing, Sale Price, Sources, Link, Image Link(s)
+ * Remainder: Body sections separated by delimiter
  */
 function parseInputPayload(rawText, delimiter, directPhotoId = null) {
   const normalized = rawText.replace(/\r\n/g, '\n').trim();
@@ -71,9 +80,8 @@ function parseInputPayload(rawText, delimiter, directPhotoId = null) {
       'Invalid input format. Your message must contain:\n' +
       'Line 1: Headline\n' +
       'Line 2: Product Name\n' +
-      'Line 3: Product Code\n' +
-      'Line 4+: Body sections separated by "' + delimiter + '"\n' +
-      '(Optional: Line 4 can be Image URL(s) or attach photos directly)'
+      'Line 3: Product Code (SKU)\n' +
+      'Line 4+: Body sections separated by "' + delimiter + '"'
     );
   }
 
@@ -85,31 +93,58 @@ function parseInputPayload(rawText, delimiter, directPhotoId = null) {
     throw new Error('Headline (Line 1) and Product Code (Line 3) cannot be empty.');
   }
 
+  let costing = '';
+  let salePrice = '';
+  let sources = '';
+  let link = '';
   let imageUrls = [];
+
   if (directPhotoId) {
     imageUrls.push(directPhotoId);
   }
 
   let bodyStartIndex = 3;
 
-  // Check if Line 4 contains image links
-  if (lines.length > 3) {
-    const line4 = lines[3].trim();
-    if (
-      line4.startsWith('http://') ||
-      line4.startsWith('https://') ||
-      line4.toLowerCase().startsWith('img:') ||
-      line4.toLowerCase().startsWith('image:')
-    ) {
-      const cleanLine = line4.replace(/^img:|^image:/i, '').trim();
+  // Check subsequent lines for optional metadata prefixes or links before body delimiter
+  for (let i = 3; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (line === delimiter) {
+      break;
+    }
+    const lower = line.toLowerCase();
+    if (lower.startsWith('cost:') || lower.startsWith('costing:')) {
+      costing = line.replace(/^cost:|^costing:/i, '').trim();
+      bodyStartIndex = i + 1;
+    } else if (lower.startsWith('sale:') || lower.startsWith('price:') || lower.startsWith('sale price:')) {
+      salePrice = line.replace(/^sale:|^price:|^sale price:/i, '').trim();
+      bodyStartIndex = i + 1;
+    } else if (lower.startsWith('source:') || lower.startsWith('sources:')) {
+      sources = line.replace(/^source:|^sources:/i, '').trim();
+      bodyStartIndex = i + 1;
+    } else if (lower.startsWith('link:')) {
+      link = line.replace(/^link:/i, '').trim();
+      bodyStartIndex = i + 1;
+    } else if (lower.startsWith('img:') || lower.startsWith('image:')) {
+      const cleanLine = line.replace(/^img:|^image:/i, '').trim();
       const extractedUrls = cleanLine
         .split(/[\s,]+/)
         .map((u) => u.trim())
         .filter((u) => u.startsWith('http://') || u.startsWith('https://'));
       if (extractedUrls.length > 0) {
         imageUrls.push(...extractedUrls);
-        bodyStartIndex = 4;
       }
+      bodyStartIndex = i + 1;
+    } else if (line.startsWith('http://') || line.startsWith('https://')) {
+      // Direct URL on its own line: treat as image URL or link
+      if (/\.(jpeg|jpg|gif|png|webp)/i.test(line)) {
+        imageUrls.push(line);
+      } else if (!link) {
+        link = line;
+      }
+      bodyStartIndex = i + 1;
+    } else {
+      // Regular text: start of body sections
+      break;
     }
   }
 
@@ -132,18 +167,33 @@ function parseInputPayload(rawText, delimiter, directPhotoId = null) {
     headline,
     productName,
     productCode,
+    costing,
+    salePrice,
+    sources,
+    link,
     imageUrls,
     sections,
   };
 }
 
 /**
- * Builds the UPPERCASE Header message (Title, Product Name, Product Code)
+ * Builds the UPPERCASE Header message (Title, Product Name, SKU, Costing, Sale Price, Sources, Link)
  */
-function formatHeaderMessage({ headline, productName, productCode, emoji }) {
+function formatHeaderMessage({
+  headline,
+  productName,
+  productCode,
+  costing,
+  salePrice,
+  sources,
+  link,
+  emoji,
+}) {
   const safeHeadline = escapeHTML((headline || '').toUpperCase());
   const safeProductName = escapeHTML((productName || '').toUpperCase());
   const safeProductCode = escapeHTML((productCode || '').toUpperCase());
+  const safeCosting = escapeHTML((costing || '').toUpperCase());
+  const safeSalePrice = escapeHTML((salePrice || '').toUpperCase());
   const cleanEmoji = escapeHTML(emoji || '📌');
 
   const lines = [
@@ -155,7 +205,29 @@ function formatHeaderMessage({ headline, productName, productCode, emoji }) {
     lines.push(`📦 <b>PRODUCT NAME:</b> <code>${safeProductName}</code>`);
   }
   if (safeProductCode) {
-    lines.push(`🔖 <b>PRODUCT CODE:</b> <code>${safeProductCode}</code>`);
+    lines.push(`🔖 <b>SKU / CODE:</b> <code>${safeProductCode}</code>`);
+  }
+  if (safeCosting) {
+    lines.push(`💵 <b>COSTING:</b> <code>${safeCosting}</code>`);
+  }
+  if (safeSalePrice) {
+    lines.push(`🏷️ <b>SALE PRICE:</b> <code>${safeSalePrice}</code>`);
+  }
+
+  if (sources && sources.trim()) {
+    const rawSource = sources.trim();
+    const urlMatch = rawSource.match(/https?:\/\/[^\s]+/) || (rawSource.includes('.') ? [rawSource] : null);
+    if (urlMatch) {
+      const cleanUrl = escapeHTML(formatHref(urlMatch[0]));
+      lines.push(`🔗 <b>SOURCE:</b> <a href="${cleanUrl}">Source</a>`);
+    } else {
+      lines.push(`🔗 <b>SOURCE:</b> <code>${escapeHTML(rawSource.toUpperCase())}</code>`);
+    }
+  }
+
+  if (link && link.trim()) {
+    const cleanUrl = escapeHTML(formatHref(link.trim()));
+    lines.push(`🌐 <b>LINK:</b> <a href="${cleanUrl}">Link</a>`);
   }
 
   return lines.join('\n');
@@ -195,12 +267,12 @@ if (bot) {
       ``,
       `Send me a text message or a photo with a caption using this structure:`,
       ``,
-      `<pre>Line 1: Headline / Title\nLine 2: Product Name\nLine 3: Product Code\nLine 4: (Optional) Image Link\nLine 5+: Body sections separated by "${SECTION_DELIMITER}"</pre>`,
+      `<pre>Line 1: Headline / Title\nLine 2: Product Name\nLine 3: Product Code (SKU)\nCost: 1200 BDT (Optional)\nSale: 1800 BDT (Optional)\nSource: https://... (Optional)\nLink: https://... (Optional)\nLine 4+: Body sections separated by "${SECTION_DELIMITER}"</pre>`,
       ``,
-      `🚀 <b>New Dispatch Sequence:</b>`,
+      `🚀 <b>Dispatch Sequence:</b>`,
       `1️⃣ <b>Photos:</b> Directly posted first`,
-      `2️⃣ <b>Header:</b> UPPERCASE Title & Product Code posted second`,
-      `3️⃣ <b>Sections:</b> Clean 1-click copyable blocks posted one-by-one (no repetitive product codes)`,
+      `2️⃣ <b>Header:</b> UPPERCASE Title & Product Code, Costing, Sale Price, clickable Source & Link`,
+      `3️⃣ <b>Sections:</b> Clean 1-click copyable blocks posted one-by-one`,
       ``,
       `⚙️ <b>Target Destination:</b>`,
       `• Chat ID: <code>${escapeHTML(TARGET_CHAT_ID)}</code>`,
@@ -223,6 +295,7 @@ if (bot) {
       { parse_mode: 'HTML' }
     );
   });
+}
 
 // Universal Dispatch Handler for both Text and Photo messages
 async function handleIncomingDispatch(ctx) {
@@ -244,11 +317,17 @@ async function handleIncomingDispatch(ctx) {
   }
 
   try {
-    const { headline, productName, productCode, imageUrls, sections } = parseInputPayload(
-      rawText,
-      SECTION_DELIMITER,
-      directPhotoId
-    );
+    const {
+      headline,
+      productName,
+      productCode,
+      costing,
+      salePrice,
+      sources,
+      link,
+      imageUrls,
+      sections,
+    } = parseInputPayload(rawText, SECTION_DELIMITER, directPhotoId);
 
     const statusMsg = await ctx.reply(
       `⏳ Dispatching: <b>${imageUrls.length}</b> photo(s), <b>1</b> header, and <b>${sections.length}</b> section(s)...`,
@@ -281,6 +360,10 @@ async function handleIncomingDispatch(ctx) {
       headline,
       productName,
       productCode,
+      costing,
+      salePrice,
+      sources,
+      link,
       emoji: HEADLINE_EMOJI,
     });
     await ctx.telegram.sendMessage(TARGET_CHAT_ID, headerHtml, {
@@ -325,6 +408,7 @@ async function handleIncomingDispatch(ctx) {
   }
 }
 
+if (bot) {
   bot.on('text', handleIncomingDispatch);
   bot.on('photo', handleIncomingDispatch);
 }
@@ -337,6 +421,7 @@ module.exports = async (req, res) => {
       if (!bot) {
         return res.status(500).json({ error: 'BOT_TOKEN is not configured' });
       }
+
       if (WEBHOOK_SECRET) {
         const incomingSecret = req.headers['x-telegram-bot-api-secret-token'];
         if (incomingSecret !== WEBHOOK_SECRET) {
